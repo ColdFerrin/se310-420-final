@@ -1,16 +1,16 @@
 package org.erau.icarus.detect.Services.Classification;
 
-import org.erau.icarus.detect.ES.DroneRepository;
+import org.erau.icarus.detect.ES.Service.DroneStorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class ClassificationService {
 
-    private DroneRepository droneRepository;
+    private DroneStorageService droneStorageService;
 
     @Autowired
-    public ClassificationService(DroneRepository droneRepository) {
-        this.droneRepository = droneRepository;
+    public ClassificationService(DroneStorageService droneStorageService) {
+        this.droneStorageService = droneStorageService;
     }
 }

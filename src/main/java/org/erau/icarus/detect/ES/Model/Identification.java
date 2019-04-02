@@ -9,6 +9,10 @@ public class Identification {
 
     private String PotentialID;
 
+    private boolean humanReview;
+
+    private int hasBeenReviewed;
+
     public String getIdType() {
         return idType;
     }
@@ -31,5 +35,21 @@ public class Identification {
 
     public void setPotentialID(String potentialID) {
         PotentialID = potentialID;
+    }
+
+    public boolean isHumanReview() {
+        return humanReview;
+    }
+
+    public void setHumanReview(boolean humanReview) {
+        this.humanReview = humanReview;
+    }
+
+    public int getHasBeenReviewed() {
+        return hasBeenReviewed;
+    }
+
+    public void setHasBeenReviewed(int hasBeenReviewed) {
+        this.hasBeenReviewed = hasBeenReviewed;
     }
 }

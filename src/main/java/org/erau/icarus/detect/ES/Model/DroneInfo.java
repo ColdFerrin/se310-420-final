@@ -1,23 +1,22 @@
 package org.erau.icarus.detect.ES.Model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.ArrayList;
 import java.util.Date;
 
 public class DroneInfo {
-    @JsonIgnore
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String id;
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String error;
 
     @JsonProperty(value = "@timestamp")
     private Date timestamp;
 
     private String image;
-
-    private boolean humanReview;
-
-    private int hasBeenReviewed;
 
     private ArrayList<Identification> identifications;
 
@@ -29,6 +28,14 @@ public class DroneInfo {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getError() {
+        return error;
+    }
+
+    public void setError(String error) {
+        this.error = error;
     }
 
     public Date getTimestamp() {
@@ -45,22 +52,6 @@ public class DroneInfo {
 
     public void setImage(String image) {
         this.image = image;
-    }
-
-    public boolean isHumanReview() {
-        return humanReview;
-    }
-
-    public void setHumanReview(boolean humanReview) {
-        this.humanReview = humanReview;
-    }
-
-    public int getHasBeenReviewed() {
-        return hasBeenReviewed;
-    }
-
-    public void setHasBeenReviewed(int hasBeenReviewed) {
-        this.hasBeenReviewed = hasBeenReviewed;
     }
 
     public ArrayList<Identification> getIdentifications() {

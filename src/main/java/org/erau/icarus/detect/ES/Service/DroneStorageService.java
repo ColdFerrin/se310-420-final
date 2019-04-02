@@ -5,13 +5,18 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.apache.http.HttpHost;
+import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.xcontent.XContentType;
 import org.erau.icarus.detect.ES.Model.DroneInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.Optional;
 
 @Service
@@ -30,16 +35,28 @@ public class DroneStorageService implements DroneStorageInterface {
     public DroneStorageService(@Value("${detect.es.hosts}") String[] esHosts) {
         //Parse the hosts in the file application.properties and create the http hosts for the database
         HttpHost[] httpHosts = new HttpHost[esHosts.length];
+        String[][] hosts = parseHosts(esHosts);
+        for (int i = 0; i < esHosts.length; i++) {
+            httpHosts[i] = new HttpHost(hosts[i][0], Integer.parseInt(hosts[i][2]), hosts[i][1]);
+        }
+        restHighLevelClient = new RestHighLevelClient(
+                RestClient.builder(httpHosts)
+        );
+    }
+
+    static String[][] parseHosts(String[] hosts){
+        //Parse the hosts in the file application.properties and create the http hosts for the database
+        String[][] output = new String[hosts.length][3];
         //loop through hosts
-        for (int i = 0; i < esHosts.length; i++){
+        for (int i = 0; i < hosts.length; i++) {
             String host;
             int port;
             String protocall;
 
             //parse this host on the semicolons
-            String[] parts = esHosts[i].split(":");
+            String[] parts = hosts[i].split(":");
             //if there is only one part then there is only a web address set port and protocol to default
-            if(parts.length == 1){
+            if (parts.length == 1) {
                 port = 9200;
                 protocall = "http";
                 host = parts[0];
@@ -47,7 +64,7 @@ public class DroneStorageService implements DroneStorageInterface {
             // if there are two parts
             else if (parts.length == 2) {
                 //check if the first part is http or https and use default port
-                if(parts[0].equalsIgnoreCase("http") || parts[0].equalsIgnoreCase("https")){
+                if (parts[0].equalsIgnoreCase("http") || parts[0].equalsIgnoreCase("https")) {
                     protocall = parts[0];
                     host = parts[1].substring(2);
                     port = 9200;
@@ -60,7 +77,7 @@ public class DroneStorageService implements DroneStorageInterface {
                 }
             }
             //parse parts if there are 3
-            else if (parts.length == 3){
+            else if (parts.length == 3) {
                 protocall = parts[0];
                 host = parts[1].substring(2);
                 port = Integer.parseInt(parts[2]);
@@ -71,17 +88,28 @@ public class DroneStorageService implements DroneStorageInterface {
                 host = "localhost";
                 port = 9200;
             }
-            httpHosts[i] = new HttpHost(host, port, protocall);
+            output[i][0] = protocall;
+            output[i][1] = host;
+            output[i][2] = String.valueOf(port);
         }
-        restHighLevelClient = new RestHighLevelClient(
-                RestClient.builder(httpHosts)
-        );
+        return output;
     }
 
     @Override
-    public DroneInfo save(DroneInfo entity) {
-        System.out.println("you have saved");
-        return null;
+    public DroneInfo save(DroneInfo entity) throws IOException {
+        IndexRequest indexRequest = new IndexRequest(
+                "icarus-drone-id",
+                "_doc"
+        );
+        String jsonString = DEFAULT_JSON_MAPPER.writeValueAsString(entity);
+        indexRequest.source(jsonString, XContentType.JSON);
+        IndexResponse indexResponse = restHighLevelClient.index(indexRequest, RequestOptions.DEFAULT);
+        if (indexResponse.status().getStatus() == 200) {
+            entity.setId(indexResponse.getId());
+        } else {
+            entity.setError(indexResponse.getResult().getLowercase());
+        }
+        return entity;
     }
 
     @Override

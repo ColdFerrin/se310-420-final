@@ -22,6 +22,8 @@ public class DroneInfo {
 
     private Camera camera;
 
+    private String test;
+
     public String getId() {
         return id;
     }
@@ -68,5 +70,13 @@ public class DroneInfo {
 
     public void setCamera(Camera camera) {
         this.camera = camera;
+    }
+
+    public String getTest() {
+        return test;
+    }
+
+    public void setTest(String test) {
+        this.test = test;
     }
 }

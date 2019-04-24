@@ -9,7 +9,7 @@ public class Identification {
 
     private String PotentialID;
 
-    private boolean humanReview;
+    private boolean humanReviewNeeded;
 
     private int hasBeenReviewed;
 
@@ -37,12 +37,12 @@ public class Identification {
         PotentialID = potentialID;
     }
 
-    public boolean isHumanReview() {
-        return humanReview;
+    public boolean isHumanReviewNeeded() {
+        return humanReviewNeeded;
     }
 
-    public void setHumanReview(boolean humanReview) {
-        this.humanReview = humanReview;
+    public void setHumanReviewNeeded(boolean humanReviewNeeded) {
+        this.humanReviewNeeded = humanReviewNeeded;
     }
 
     public int getHasBeenReviewed() {

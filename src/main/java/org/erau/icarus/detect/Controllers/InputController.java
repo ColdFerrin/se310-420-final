@@ -2,7 +2,7 @@ package org.erau.icarus.detect.Controllers;
 
 import org.erau.icarus.detect.ES.Model.DroneInfo;
 import org.erau.icarus.detect.ES.Service.DroneStorageService;
-import org.erau.icarus.detect.Services.BNPId.BNPIdService;
+import org.erau.icarus.detect.Services.BNPDId.BNPDIdService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,25 +18,25 @@ import java.util.Optional;
 @RequestMapping("/input")
 public class InputController {
 
-    private BNPIdService bnpIdService;
+    private BNPDIdService BNPDIdService;
 
     private DroneStorageService droneStorageService;
 
     @Autowired
-    public InputController(BNPIdService bnpIdService, DroneStorageService droneStorageService) {
-        this.bnpIdService = bnpIdService;
+    public InputController(BNPDIdService BNPDIdService, DroneStorageService droneStorageService) {
+        this.BNPDIdService = BNPDIdService;
         this.droneStorageService = droneStorageService;
     }
 
     @RequestMapping(value = "/image", method = RequestMethod.PUT)
-    ResponseEntity<?> inputImage(@RequestBody DroneInfo droneInfo){
-        bnpIdService.input(droneInfo);
-        return new ResponseEntity<>("You have uploaded an image", HttpStatus.OK);
+    ResponseEntity<?> inputImage(@RequestBody DroneInfo droneInfo) throws IOException{
+        BNPDIdService.input(droneInfo);
+        return new ResponseEntity<>("{\"status\":\"image uploaded\"}", HttpStatus.OK);
     }
 
     @RequestMapping(value = "/update", method = RequestMethod.PUT)
     ResponseEntity<?> updateMetadata(@RequestBody DroneInfo droneInfo) throws IOException {
-        Optional<DroneInfo> optionalDroneInfo = droneStorageService.findByID(droneInfo.getId());
+        Optional<DroneInfo> optionalDroneInfo = droneStorageService.findOne(droneInfo.getId());
         if(optionalDroneInfo.isPresent()){
             DroneInfo droneToBeUpdated = optionalDroneInfo.get();
             if(!droneInfo.getCamera().equals(droneToBeUpdated.getCamera())){

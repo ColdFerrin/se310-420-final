@@ -9,13 +9,15 @@ import java.util.Optional;
 public interface DroneStorageInterface {
     DroneInfo save(DroneInfo entity) throws IOException;
 
-    Optional<DroneInfo> findByID(String id);
+    Optional<DroneInfo> findOne(String id) throws IOException;
 
-    Iterable<DroneInfo> findAllPaging(int pageSize, int pageNum);
+    Iterable<DroneInfo> findAllPaging() throws IOException;
 
-    long count();
+    java.lang.Iterable findAllPaging(int pageSize, int pageNum) throws IOException;
 
-    void delete(DroneInfo entity);
+    long count() throws IOException;
 
-    boolean existsById(String primaryKey);
+    void delete(DroneInfo entity) throws IOException;
+
+    boolean existsById(String primaryKey) throws IOException;
 }

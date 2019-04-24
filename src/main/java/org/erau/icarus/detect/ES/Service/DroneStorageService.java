@@ -5,18 +5,32 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.apache.http.HttpHost;
+import org.elasticsearch.action.delete.DeleteRequest;
+import org.elasticsearch.action.delete.DeleteResponse;
+import org.elasticsearch.action.get.GetRequest;
+import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.core.CountRequest;
+import org.elasticsearch.client.core.CountResponse;
 import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.erau.icarus.detect.ES.Model.DroneInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Optional;
 
 @Service
@@ -29,7 +43,7 @@ public class DroneStorageService implements DroneStorageInterface {
             .enable(JsonParser.Feature.ALLOW_COMMENTS)
             .findAndRegisterModules();
 
-    private RestHighLevelClient restHighLevelClient;
+    private RestHighLevelClient client;
 
     @Autowired
     public DroneStorageService(@Value("${detect.es.hosts}") String[] esHosts) {
@@ -39,7 +53,7 @@ public class DroneStorageService implements DroneStorageInterface {
         for (int i = 0; i < esHosts.length; i++) {
             httpHosts[i] = new HttpHost(hosts[i][0], Integer.parseInt(hosts[i][2]), hosts[i][1]);
         }
-        restHighLevelClient = new RestHighLevelClient(
+        client = new RestHighLevelClient(
                 RestClient.builder(httpHosts)
         );
     }
@@ -99,11 +113,11 @@ public class DroneStorageService implements DroneStorageInterface {
     public DroneInfo save(DroneInfo entity) throws IOException {
         IndexRequest indexRequest = new IndexRequest(
                 "icarus-drone-id",
-                "_doc"
+                "doc"
         );
         String jsonString = DEFAULT_JSON_MAPPER.writeValueAsString(entity);
         indexRequest.source(jsonString, XContentType.JSON);
-        IndexResponse indexResponse = restHighLevelClient.index(indexRequest, RequestOptions.DEFAULT);
+        IndexResponse indexResponse = client.index(indexRequest, RequestOptions.DEFAULT);
         if (indexResponse.status().getStatus() == 200) {
             entity.setId(indexResponse.getId());
         } else {
@@ -113,28 +127,65 @@ public class DroneStorageService implements DroneStorageInterface {
     }
 
     @Override
-    public Optional<DroneInfo> findByID(String id) {
-        System.out.println("you tried to find by id");
-        return Optional.empty();
+    public Optional<DroneInfo> findOne(String id) throws IOException{
+        GetRequest getRequest = new GetRequest("icarus-drone-id", "doc", id);
+        GetResponse getResponse = client.get(getRequest, RequestOptions.DEFAULT);
+        DroneInfo toReturn = DEFAULT_JSON_MAPPER.readValue(getResponse.getSourceAsString(), DroneInfo.class);
+        return Optional.of(toReturn);
     }
 
     @Override
-    public Iterable<DroneInfo> findAllPaging(int pageSize, int pageNum){
-        return null;
+    public Iterable<DroneInfo> findAllPaging() throws IOException {
+        return findAllPaging(10, 0);
     }
 
     @Override
-    public long count() {
-        return 0;
+    public Iterable<DroneInfo> findAllPaging(int pageSize, int pageNum) throws IOException{
+        SearchRequest searchRequest = new SearchRequest();
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        searchSourceBuilder.query(QueryBuilders.matchAllQuery());
+        searchSourceBuilder.from(pageSize * pageNum);
+        searchSourceBuilder.size(pageSize);
+        searchRequest.source(searchSourceBuilder);
+        searchRequest.indices("icarus-drone-id");
+
+        SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
+        SearchHits searchHits = searchResponse.getHits();
+        SearchHit[] searchHitArray = searchHits.getHits();
+
+        ArrayList<DroneInfo> droneInfoArrayList = new ArrayList<>();
+
+        for (SearchHit hit :
+                searchHitArray) {
+            DroneInfo droneInfo = DEFAULT_JSON_MAPPER.readValue(hit.getSourceAsString(), DroneInfo.class);
+            droneInfoArrayList.add(droneInfo);
+        }
+        return droneInfoArrayList;
     }
 
     @Override
-    public void delete(DroneInfo entity) {
-
+    public long count() throws IOException{
+        CountRequest countRequest = new CountRequest("icarus-drone-id");
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        searchSourceBuilder.query(QueryBuilders.matchAllQuery());
+        countRequest.source(searchSourceBuilder);
+        CountResponse countResponse = client.count(countRequest, RequestOptions.DEFAULT);
+        return countResponse.getCount();
     }
 
     @Override
-    public boolean existsById(String primaryKey) {
-        return false;
+    public void delete(DroneInfo entity) throws IOException{
+        DeleteRequest deleteRequest = new DeleteRequest("icarus-drone-id",
+                "doc",
+                entity.getId());
+        DeleteResponse deleteResponse = client.delete(deleteRequest, RequestOptions.DEFAULT);
+    }
+
+    @Override
+    public boolean existsById(String primaryKey) throws IOException{
+        GetRequest getRequest = new GetRequest("icarus-drone-id", "doc", primaryKey);
+        getRequest.fetchSourceContext(new FetchSourceContext(false));
+        getRequest.storedFields("_none_");
+        return client.exists(getRequest, RequestOptions.DEFAULT);
     }
 }

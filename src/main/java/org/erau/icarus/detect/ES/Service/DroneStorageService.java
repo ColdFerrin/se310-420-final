@@ -13,6 +13,7 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.support.replication.ReplicationResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
@@ -33,7 +34,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Optional;
 
-@Service
+@Service    //Creates the class as a library managed singleton.
 public class DroneStorageService implements DroneStorageInterface {
 
     //Create a default json mapper
@@ -112,36 +113,53 @@ public class DroneStorageService implements DroneStorageInterface {
         return output;
     }
 
-    @Override
+
+    @Override //Tells compiler that the inteface method is being overridden
+    //Saves Drone info to database
     public DroneInfo save(DroneInfo entity) throws IOException {
+        //generate an index request which is the equivalent to save
         IndexRequest indexRequest = new IndexRequest("icarus-drone-id", "_doc");
+        //generate a random id string
         indexRequest.id();
+        //write the object to a json formatted string with the json mapper
         String jsonString = DEFAULT_JSON_MAPPER.writeValueAsString(entity);
+        //save the json formatted string to the index request
         indexRequest.source(jsonString, XContentType.JSON);
+        //run the index request with the default option on the client and get the response synchronously
         IndexResponse indexResponse = client.index(indexRequest, RequestOptions.DEFAULT);
-        if (indexResponse.status().getStatus() == 200) {
-            entity.setId(indexResponse.getId());
-        } else {
+        //get the id that was saved in the database from the response
+        entity.setId(indexResponse.getId());
+        //get the shard information from the response
+        ReplicationResponse.ShardInfo shardInfo = indexResponse.getShardInfo();
+        //if the successful shards is less then the total shards set the error message
+        if (shardInfo.getTotal() != shardInfo.getSuccessful()) {
             entity.setError(indexResponse.getShardInfo().toString());
         }
+        //return the done info with all new information
         return entity;
     }
 
     @Override
     public Optional<DroneInfo> findOne(String id) throws IOException{
+        //Generate new get request. database method for find one with input id
         GetRequest getRequest = new GetRequest("icarus-drone-id", "_doc", id);
+        //Send the get request to the client and get the response.
         GetResponse getResponse = client.get(getRequest, RequestOptions.DEFAULT);
+        //get the json string value from the response and generate the drone info object
         DroneInfo toReturn = DEFAULT_JSON_MAPPER.readValue(getResponse.getSourceAsString(), DroneInfo.class);
+        //generate the return optional from the drone info object
         return Optional.of(toReturn);
     }
 
     @Override
+    //calls find all paging with default values
     public Iterable<DroneInfo> findAllPaging() throws IOException {
         return findAllPaging(10, 0);
     }
 
     @Override
     public Iterable<DroneInfo> findAllPaging(int pageSize, int pageNum) throws IOException{
+        //
         SearchRequest searchRequest = new SearchRequest();
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         searchSourceBuilder.query(QueryBuilders.matchAllQuery());
@@ -175,11 +193,12 @@ public class DroneStorageService implements DroneStorageInterface {
     }
 
     @Override
-    public void delete(DroneInfo entity) throws IOException{
+    public String delete(String id) throws IOException{
         DeleteRequest deleteRequest = new DeleteRequest("icarus-drone-id",
-                "doc",
-                entity.getId());
+                "_doc",
+                id);
         DeleteResponse deleteResponse = client.delete(deleteRequest, RequestOptions.DEFAULT);
+        return deleteResponse.getId();
     }
 
     @Override

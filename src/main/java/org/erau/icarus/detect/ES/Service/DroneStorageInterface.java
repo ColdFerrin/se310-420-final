@@ -1,6 +1,5 @@
 package org.erau.icarus.detect.ES.Service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.erau.icarus.detect.ES.Model.DroneInfo;
 
 import java.io.IOException;
@@ -17,7 +16,7 @@ public interface DroneStorageInterface {
 
     long count() throws IOException;
 
-    void delete(DroneInfo entity) throws IOException;
+    String delete(String id) throws IOException;
 
     boolean existsById(String primaryKey) throws IOException;
 }

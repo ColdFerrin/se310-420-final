@@ -25,7 +25,7 @@ public class DroneInfo {
 
     private Camera camera;
 
-    private String test;
+    private boolean test;
 
     public String getId() {
         return id;
@@ -83,11 +83,11 @@ public class DroneInfo {
         this.camera = camera;
     }
 
-    public String getTest() {
+    public Boolean getTest() {
         return test;
     }
 
-    public void setTest(String test) {
+    public void setTest(boolean test) {
         this.test = test;
     }
 }

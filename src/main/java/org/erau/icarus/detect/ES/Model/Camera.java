@@ -1,17 +1,17 @@
 package org.erau.icarus.detect.ES.Model;
 
 public class Camera {
-    private String cameraID;
+    private Long cameraID;
 
     private CameraLocation cameraLocation;
 
     private CameraModel cameraModel;
 
-    public String getCameraID() {
+    public Long getCameraID() {
         return cameraID;
     }
 
-    public void setCameraID(String cameraID) {
+    public void setCameraID(Long cameraID) {
         this.cameraID = cameraID;
     }
 

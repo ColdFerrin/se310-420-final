@@ -1,23 +1,23 @@
 package org.erau.icarus.detect.ES.Model;
 
 public class CameraLocation {
-    private float lat;
+    private double lat;
 
-    private float lon;
+    private double lon;
 
-    public float getLat() {
+    public double getLat() {
         return lat;
     }
 
-    public void setLat(float lat) {
+    public void setLat(double lat) {
         this.lat = lat;
     }
 
-    public float getLon() {
+    public double getLon() {
         return lon;
     }
 
-    public void setLon(float lon) {
+    public void setLon(double lon) {
         this.lon = lon;
     }
 }

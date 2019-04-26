@@ -19,12 +19,14 @@ public class BNPDIdService {
 
     private DroneIdService droneIdService;
 
+    //This will be removed when switching to AI
     private Random rand;
 
     @Autowired
     public BNPDIdService(DroneStorageService droneStorageService, DroneIdService droneIdService) {
         this.droneStorageService = droneStorageService;
         this.droneIdService = droneIdService;
+        //This will be removed when switching to AI
         this.rand = new Random();
     }
 
@@ -35,6 +37,7 @@ public class BNPDIdService {
         ArrayList<Float> scores = new ArrayList<>();
         filler.setIdType("BNPDId");
 
+        //This will be removed when switching to AI
         for (int i = 0; i < 4; i++) {
             float tempScore = scoreGenerator();
             scores.add(tempScore);
@@ -55,6 +58,7 @@ public class BNPDIdService {
         return toReturn;
     }
 
+    //This will be removed when switching to AI
     public void setRandSeed(long seed) {
         rand = new Random(seed);
     }

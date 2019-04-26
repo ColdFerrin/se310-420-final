@@ -3,7 +3,6 @@ package org.erau.icarus.detect.Services.DroneId;
 import org.erau.icarus.detect.ES.Model.DroneInfo;
 import org.erau.icarus.detect.ES.Model.Identification;
 import org.erau.icarus.detect.ES.Service.DroneStorageService;
-import org.erau.icarus.detect.Services.HumanReview.HumanReviewService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,17 +15,17 @@ public class DroneIdService {
 
     private DroneStorageService droneStorageService;
 
-    private HumanReviewService humanReviewService;
-
+    //This will be removed when switching to AI
     private Random rand;
 
     @Autowired
-    public DroneIdService(DroneStorageService droneStorageService, HumanReviewService humanReviewService) {
+    public DroneIdService(DroneStorageService droneStorageService) {
         this.droneStorageService = droneStorageService;
-        this.humanReviewService = humanReviewService;
+        //This will be removed when switching to AI
         this.rand = new Random();
     }
 
+    //This will be removed when switching to AI
     public void setRandSeed(Long seed) {
         rand = new Random(seed);
     }
@@ -36,12 +35,14 @@ public class DroneIdService {
         input.setIdType("DroneID");
         ArrayList<Float> scores = new ArrayList<>();
 
+        //This will be removed when switching to AI
         for(int i = 0; i < 128; i++){
             scores.add(rand.nextFloat());
         }
 
         input.setScore(scores);
         float genData = rand.nextFloat();
+        //This will be removed when switching to AI
         if(genData > .9){
             input.setHumanReviewNeeded(true);
         }

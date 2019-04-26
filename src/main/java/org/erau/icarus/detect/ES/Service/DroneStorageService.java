@@ -37,7 +37,7 @@ import java.util.Optional;
 public class DroneStorageService implements DroneStorageInterface {
 
     //Create a default json mapper
-    private static final ObjectMapper DEFAULT_JSON_MAPPER = new ObjectMapper()
+    public static final ObjectMapper DEFAULT_JSON_MAPPER = new ObjectMapper()
             .registerModule(new JavaTimeModule())
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
             .enable(JsonParser.Feature.ALLOW_COMMENTS)
@@ -51,13 +51,16 @@ public class DroneStorageService implements DroneStorageInterface {
         HttpHost[] httpHosts = new HttpHost[esHosts.length];
         String[][] hosts = parseHosts(esHosts);
         for (int i = 0; i < esHosts.length; i++) {
-            httpHosts[i] = new HttpHost(hosts[i][0], Integer.parseInt(hosts[i][2]), hosts[i][1]);
+            httpHosts[i] = new HttpHost(hosts[i][1], Integer.parseInt(hosts[i][2]), hosts[i][0]);
         }
         client = new RestHighLevelClient(
                 RestClient.builder(httpHosts)
         );
     }
 
+    public DroneStorageService(RestHighLevelClient client) {
+        this.client = client;
+    }
     static String[][] parseHosts(String[] hosts){
         //Parse the hosts in the file application.properties and create the http hosts for the database
         String[][] output = new String[hosts.length][3];
@@ -111,24 +114,22 @@ public class DroneStorageService implements DroneStorageInterface {
 
     @Override
     public DroneInfo save(DroneInfo entity) throws IOException {
-        IndexRequest indexRequest = new IndexRequest(
-                "icarus-drone-id",
-                "doc"
-        );
+        IndexRequest indexRequest = new IndexRequest("icarus-drone-id", "_doc");
+        indexRequest.id();
         String jsonString = DEFAULT_JSON_MAPPER.writeValueAsString(entity);
         indexRequest.source(jsonString, XContentType.JSON);
         IndexResponse indexResponse = client.index(indexRequest, RequestOptions.DEFAULT);
         if (indexResponse.status().getStatus() == 200) {
             entity.setId(indexResponse.getId());
         } else {
-            entity.setError(indexResponse.getResult().getLowercase());
+            entity.setError(indexResponse.getShardInfo().toString());
         }
         return entity;
     }
 
     @Override
     public Optional<DroneInfo> findOne(String id) throws IOException{
-        GetRequest getRequest = new GetRequest("icarus-drone-id", "doc", id);
+        GetRequest getRequest = new GetRequest("icarus-drone-id", "_doc", id);
         GetResponse getResponse = client.get(getRequest, RequestOptions.DEFAULT);
         DroneInfo toReturn = DEFAULT_JSON_MAPPER.readValue(getResponse.getSourceAsString(), DroneInfo.class);
         return Optional.of(toReturn);
@@ -183,7 +184,7 @@ public class DroneStorageService implements DroneStorageInterface {
 
     @Override
     public boolean existsById(String primaryKey) throws IOException{
-        GetRequest getRequest = new GetRequest("icarus-drone-id", "doc", primaryKey);
+        GetRequest getRequest = new GetRequest("icarus-drone-id", "_doc", primaryKey);
         getRequest.fetchSourceContext(new FetchSourceContext(false));
         getRequest.storedFields("_none_");
         return client.exists(getRequest, RequestOptions.DEFAULT);

@@ -1,15 +1,15 @@
 package org.erau.icarus.detect.Services.DroneId;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Random;
-
 import org.erau.icarus.detect.ES.Model.DroneInfo;
 import org.erau.icarus.detect.ES.Model.Identification;
 import org.erau.icarus.detect.ES.Service.DroneStorageService;
 import org.erau.icarus.detect.Services.HumanReview.HumanReviewService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Random;
 
 @Service
 public class DroneIdService {
@@ -31,7 +31,7 @@ public class DroneIdService {
         rand = new Random(seed);
     }
 
-    public void input(DroneInfo droneInfo) throws IOException {
+    public DroneInfo input(DroneInfo droneInfo) throws IOException {
         Identification input = new Identification();
         input.setIdType("DroneID");
         ArrayList<Float> scores = new ArrayList<>();
@@ -48,6 +48,6 @@ public class DroneIdService {
 
         droneInfo.getIdentifications().add(input);
 
-        droneStorageService.save(droneInfo);
+        return droneStorageService.save(droneInfo);
     }
 }

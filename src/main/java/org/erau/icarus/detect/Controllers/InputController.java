@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
+import java.sql.Date;
+import java.time.Instant;
 import java.util.Optional;
 
 @RestController
@@ -28,28 +30,45 @@ public class InputController {
         this.droneStorageService = droneStorageService;
     }
 
+    //Define mapping as /input/image and http method as put
     @RequestMapping(value = "/image", method = RequestMethod.PUT)
+    // Input to the function is the body of the http request mapped to drone info object
     ResponseEntity<?> inputImage(@RequestBody DroneInfo droneInfo) throws IOException{
-        BNPDIdService.input(droneInfo);
-        return new ResponseEntity<>("{\"status\":\"image uploaded\"}", HttpStatus.OK);
+        //generate timestamp for image
+        droneInfo.setTimestamp(Date.from(Instant.now()));
+        //input the drone info to bnpdid service
+        DroneInfo toReturn = BNPDIdService.input(droneInfo);
+        //set status
+        toReturn.setStatus("Image uploaded");
+        //return response entity with body of droneinfo.
+        return new ResponseEntity<>(toReturn, HttpStatus.OK);
     }
 
+    //define mapping as /input/update and http method as put
     @RequestMapping(value = "/update", method = RequestMethod.PUT)
     ResponseEntity<?> updateMetadata(@RequestBody DroneInfo droneInfo) throws IOException {
+        // find requested drone from database
         Optional<DroneInfo> optionalDroneInfo = droneStorageService.findOne(droneInfo.getId());
+        //check if requested drone is in database
         if(optionalDroneInfo.isPresent()){
+            //get the drone info from database out of optional
             DroneInfo droneToBeUpdated = optionalDroneInfo.get();
+            //check if the camera is the same as what is in the database
             if(!droneInfo.getCamera().equals(droneToBeUpdated.getCamera())){
+                //Set the camera with new data if it is different
                 optionalDroneInfo.get().setCamera(droneInfo.getCamera());
             }
             else{
+                //send an error if nothing has changed
                 droneToBeUpdated.setError("Redundant camera info modification");
                 return new ResponseEntity<>(droneToBeUpdated, HttpStatus.CONFLICT);
             }
 
+            //save the newest drone info to database
             droneStorageService.save(droneToBeUpdated);
         }
         else{
+            //if the drone requested is not fround send an error
             droneInfo.setError("Drone not found");
             return new ResponseEntity<>(droneInfo, HttpStatus.NOT_FOUND);
         }

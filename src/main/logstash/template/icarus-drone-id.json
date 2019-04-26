@@ -1,0 +1,99 @@
+{
+  "settings": {
+    "index": {
+      "number_of_replicas": 1,
+      "number_of_shards": 2,
+      "refresh_interval": "1s",
+      "mapping.total_fields.limit": 2000,
+      "mapping.depth.limit": 50,
+      "mapping.nested_fields.limit": 200
+    }
+  },
+  "index_patterns": "icarus-drone-id*",
+  "version": 1,
+  "mappings": {
+    "properties": {
+      "@timestamp": {
+        "type": "date"
+      },
+      "camera": {
+        "properties": {
+          "cameraID": {
+            "type": "long"
+          },
+          "cameraLocation": {
+            "type": "geo_point"
+          },
+          "cameraModel": {
+            "properties": {
+              "lens": {
+                "type": "text",
+                "fields": {
+                  "keyword": {
+                    "type": "keyword",
+                    "ignore_above": 256
+                  }
+                }
+              },
+              "make": {
+                "type": "text",
+                "fields": {
+                  "keyword": {
+                    "type": "keyword",
+                    "ignore_above": 256
+                  }
+                }
+              },
+              "model": {
+                "type": "text",
+                "fields": {
+                  "keyword": {
+                    "type": "keyword",
+                    "ignore_above": 256
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "identifications": {
+        "properties": {
+          "hasBeenReviewed": {
+            "type": "long"
+          },
+          "humanReviewNeeded": {
+            "type": "boolean"
+          },
+          "idType": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256
+              }
+            }
+          },
+          "potentialID": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256
+              }
+            }
+          },
+          "score": {
+            "type": "float"
+          }
+        }
+      },
+      "image": {
+        "type": "binary"
+      },
+      "test": {
+        "type": "boolean"
+      }
+    }
+  }
+}

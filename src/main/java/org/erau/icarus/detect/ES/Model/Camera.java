@@ -1,11 +1,9 @@
 package org.erau.icarus.detect.ES.Model;
 
-import org.elasticsearch.common.geo.GeoPoint;
-
 public class Camera {
     private String cameraID;
 
-    private GeoPoint cameraLocation;
+    private CameraLocation cameraLocation;
 
     private CameraModel cameraModel;
 
@@ -17,11 +15,11 @@ public class Camera {
         this.cameraID = cameraID;
     }
 
-    public GeoPoint getCameraLocation() {
+    public CameraLocation getCameraLocation() {
         return cameraLocation;
     }
 
-    public void setCameraLocation(GeoPoint cameraLocation) {
+    public void setCameraLocation(CameraLocation cameraLocation) {
         this.cameraLocation = cameraLocation;
     }
 
@@ -31,5 +29,26 @@ public class Camera {
 
     public void setCameraModel(CameraModel cameraModel) {
         this.cameraModel = cameraModel;
+    }
+    
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Camera camera = (Camera) o;
+
+        if (!cameraID.equals(camera.cameraID)) return false;
+        if (!cameraLocation.equals(camera.cameraLocation)) return false;
+        return cameraModel.equals(camera.cameraModel);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = cameraID.hashCode();
+        result = 31 * result + cameraLocation.hashCode();
+        result = 31 * result + cameraModel.hashCode();
+        return result;
     }
 }

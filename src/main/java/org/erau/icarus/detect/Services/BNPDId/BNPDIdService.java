@@ -1,16 +1,16 @@
 package org.erau.icarus.detect.Services.BNPDId;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Random;
-import java.util.ArrayList;
-
 import org.erau.icarus.detect.ES.Model.DroneInfo;
 import org.erau.icarus.detect.ES.Model.Identification;
 import org.erau.icarus.detect.ES.Service.DroneStorageService;
 import org.erau.icarus.detect.Services.DroneId.DroneIdService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Random;
 
 @Service
 public class BNPDIdService {
@@ -28,7 +28,8 @@ public class BNPDIdService {
         this.rand = new Random();
     }
 
-    public void input(DroneInfo drone) throws IOException {
+    public DroneInfo input(DroneInfo drone) throws IOException {
+        DroneInfo toReturn;
         ArrayList<Identification> identifications = new ArrayList<>();
         Identification filler = new Identification();
         ArrayList<Float> scores = new ArrayList<>();
@@ -45,11 +46,13 @@ public class BNPDIdService {
         drone.setIdentifications(identifications);
 
         if(!filler.isHumanReviewNeeded() && filler.getPotentialID().equalsIgnoreCase("D")){
-            droneIdService.input(drone);
+            toReturn = droneIdService.input(drone);
         }
         else{
-            droneStorageService.save(drone);
+            toReturn = droneStorageService.save(drone);
         }
+
+        return toReturn;
     }
 
     public void setRandSeed(long seed) {
@@ -89,8 +92,6 @@ public class BNPDIdService {
     }
 
     private float scoreGenerator() {
-        float score;
-        score = rand.nextFloat();
-        return score;
+        return rand.nextFloat();
     }
 }

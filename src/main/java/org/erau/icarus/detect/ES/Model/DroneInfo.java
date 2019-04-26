@@ -13,6 +13,9 @@ public class DroneInfo {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String error;
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String status;
+
     @JsonProperty(value = "@timestamp")
     private Date timestamp;
 
@@ -38,6 +41,14 @@ public class DroneInfo {
 
     public void setError(String error) {
         this.error = error;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public Date getTimestamp() {

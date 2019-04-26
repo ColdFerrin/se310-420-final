@@ -19,7 +19,8 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.Optional;
 
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.is;
+import static org.mockito.ArgumentMatchers.any;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -34,13 +35,15 @@ public class InputControllerTest {
     private MockMvc mockMvc;
 
     @Mock
-    private BNPDIdService BNPDIdService;
+    private BNPDIdService bnpdIdService;
 
     @Mock
     private DroneStorageService droneStorageService;
 
     @InjectMocks
     private InputController inputController;
+
+    private static final String inputString = "{\"image\":\"/==\",\"camera\":{\"cameraID\":1,\"cameraLocation\":{\"lat\":34.616026,\"lon\":-112.450895},\"cameraModel\":{\"make\":\"flir\",\"model\":\"some flir\",\"lens\":\"some lens\"}}}";
 
     @Before
     public void setUp() throws Exception {
@@ -49,13 +52,18 @@ public class InputControllerTest {
 
     @Test
     public void inputImageTest() throws Exception{
+        DroneInfo toReturn = DroneStorageService.DEFAULT_JSON_MAPPER.readValue(inputString, DroneInfo.class);
+
+        Mockito.when(bnpdIdService.input(any(DroneInfo.class))).thenReturn(toReturn);
+
         // Test for good image uploaded successfully.
         mockMvc.perform(put("/input/image")
-                .content("{\"image\":\"/==\",\"camera\":{\"cameraID\":1,\"cameraLocation\":\"34.616026, -112.450895\",\"cameraModel\":{\"make\":\"flir\",\"model\":\"some flir\",\"lens\":\"some lens\"}}}")
+                .content(inputString)
                 .contentType(MediaType.APPLICATION_JSON_UTF8))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status", is("image uploaded")))
+                .andExpect(jsonPath("$.status", is("Image uploaded")))
                 .andReturn();
+
 
         // Test of empty body upload
         mockMvc.perform(put("/input/image")
@@ -71,7 +79,7 @@ public class InputControllerTest {
 
         // test for drone not found.
         mockMvc.perform(put("/input/update")
-                .content("{\"image\":\"/==\",\"camera\":{\"cameraID\":1,\"cameraLocation\":\"34.616026, -112.450895\",\"cameraModel\":{\"make\":\"flir\",\"model\":\"some flir\",\"lens\":\"some lens\"}}}")
+                .content(inputString)
                 .contentType(MediaType.APPLICATION_JSON_UTF8))
                 .andExpect(status().isNotFound())
                 .andReturn();
@@ -83,7 +91,7 @@ public class InputControllerTest {
         Mockito.when(droneStorageService.findOne(null)).thenReturn(testOptional);
 
         mockMvc.perform(put("/input/update")
-                .content("{\"image\":\"/==\",\"camera\":{\"cameraID\":1,\"cameraLocation\":\"34.616026, -112.450895\",\"cameraModel\":{\"make\":\"flir\",\"model\":\"some flir\",\"lens\":\"some lens\"}}}")
+                .content(inputString)
                 .contentType(MediaType.APPLICATION_JSON_UTF8))
                 .andExpect(status().isOk())
                 .andReturn();

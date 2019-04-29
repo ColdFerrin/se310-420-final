@@ -17,7 +17,7 @@
         
     * To Build
         1. build jar with `mvn package spring-boot:repackage`
-        2. run built jar with `java -jar target/detect-0.0.1-SNAPSHOT-spring-boot.jar`
+        2. run built jar with `java -jar target/detect-x.x.x-x-spring-boot.jar`
 
 ## Definitions
 

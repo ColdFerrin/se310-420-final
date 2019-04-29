@@ -159,36 +159,55 @@ public class DroneStorageService implements DroneStorageInterface {
 
     @Override
     public Iterable<DroneInfo> findAllPaging(int pageSize, int pageNum) throws IOException{
-        //
+        //Create search request
         SearchRequest searchRequest = new SearchRequest();
+        //Create search query object
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        //Define query as a match all
         searchSourceBuilder.query(QueryBuilders.matchAllQuery());
+        //Set from as the index of the first object that is being looked for
         searchSourceBuilder.from(pageSize * pageNum);
+        //set the number of received objects
         searchSourceBuilder.size(pageSize);
+        //Set the search request source as the generated query
         searchRequest.source(searchSourceBuilder);
+        //Define the index that is being taken form the query
         searchRequest.indices("icarus-drone-id");
 
+        //Send the search request to the client and wait for a search response
         SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
+        //Get the search hits from the response
         SearchHits searchHits = searchResponse.getHits();
+        //convert the hits to an array
         SearchHit[] searchHitArray = searchHits.getHits();
 
+        //Create an arrayList of drone info that will be returned
         ArrayList<DroneInfo> droneInfoArrayList = new ArrayList<>();
 
+        //Iterate through the search hit array and convert the json to
+        //drone info objects and save it to the array list
         for (SearchHit hit :
                 searchHitArray) {
             DroneInfo droneInfo = DEFAULT_JSON_MAPPER.readValue(hit.getSourceAsString(), DroneInfo.class);
             droneInfoArrayList.add(droneInfo);
         }
+        //Return the array list of drone info.
         return droneInfoArrayList;
     }
 
     @Override
     public long count() throws IOException{
+        //Create a count request
         CountRequest countRequest = new CountRequest("icarus-drone-id");
+        //Create the search query that is being counted
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        //Match all for the search query
         searchSourceBuilder.query(QueryBuilders.matchAllQuery());
+        //Set the search query to the count request source
         countRequest.source(searchSourceBuilder);
+        //Send the count request to the client and wait for the response
         CountResponse countResponse = client.count(countRequest, RequestOptions.DEFAULT);
+        //Return the count from the given response
         return countResponse.getCount();
     }
 
@@ -203,6 +222,7 @@ public class DroneStorageService implements DroneStorageInterface {
 
     @Override
     public boolean existsById(String primaryKey) throws IOException{
+
         GetRequest getRequest = new GetRequest("icarus-drone-id", "_doc", primaryKey);
         getRequest.fetchSourceContext(new FetchSourceContext(false));
         getRequest.storedFields("_none_");
